@@ -267,8 +267,8 @@ if __name__ == '__main__':
     
     parser.add_argument("--invertOddContigs", help="Reverse complement the first, third etc. contig in genome 2.", action='store_true')
     
-    parser.add_argument("--contig_edge_pruning", help="Remove a random bit of sequence from edges of each contig (so these bits will be missing)", action = "store", type=int, default = [0,0], metavar=["mean","sd"])
-    parser.add_argument("--contig_edge_padding", help="Add a random bit of sequence to edges of each contig (unalignable noise)", action = "store", type=int, default = [0,0], metavar=["mean","sd"])
+    parser.add_argument("--contig_edge_pruning", help="Remove a length of sequence from edges of each contig (so these bits will be missing)", action = "store", type=int, nargs=2, default = [0,0], metavar=["mean","sd"])
+    parser.add_argument("--contig_edge_padding", help="Add a length of random sequence to edges of each contig (unalignable noise)", action = "store", type=int, nargs=2, default = [0,0], metavar=["mean","sd"])
     
     args = parser.parse_args()
     
