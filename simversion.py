@@ -323,7 +323,7 @@ for i, sequence in enumerate(genome_data_anc["sequences"]):
 #if breaking further into contigs (UNTESTED SINCE REWRITE 27 Sept 2023)
 if args.break_genome1:
     print("\nBreaking genome 1 into contigs.", file=sys.stderr)
-    genome_data_1B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[]}
+    genome_data_1B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[], "var_len":[]}
     
     for i in range(len(genome_data_1["seq_names"])):
         contigs, contig_intervals, var_pos_by_contig, var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_1["sequences"][i],
@@ -344,7 +344,7 @@ if args.break_genome1:
 
 if args.break_genome2:
     print("\nBreaking genome 2 into contigs.", file=sys.stderr)
-    genome_data_2B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[]}
+    genome_data_2B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[], "var_len":[]}
     
     for i in range(len(genome_data_2["seq_names"])):
         contigs, contig_intervals, var_pos_by_contig,
