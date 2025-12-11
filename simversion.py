@@ -339,7 +339,11 @@ if args.break_genome1:
             genome_data_1B["var_type"].append([genome_data_1["var_type"][i][k] for k in var_indices_by_contig[j]])
             genome_data_1B["var_genome"].append([genome_data_1["var_genome"][i][k] for k in var_indices_by_contig[j]])
             genome_data_1B["var_len"].append([genome_data_1["var_len"][i][k] for k in var_indices_by_contig[j]])
-    
+        
+        print(f"\n    contig lengths: {[interval[1] - interval[0] for interval in contig_intervals]}", file=sys.stderr)
+        print(f"\n    contig pruned lengths: {contig_pruned_lens}", file=sys.stderr)
+        print(f"\n    contig padded lengths: {contig_padded_lens}", file=sys.stderr)
+        
     genome_data_1 = genome_data_1B
 
 if args.break_genome2:
@@ -361,6 +365,10 @@ if args.break_genome2:
             genome_data_2B["var_type"].append([genome_data_2["var_type"][i][k] for k in var_indices_by_contig[j]])
             genome_data_2B["var_genome"].append([genome_data_2["var_genome"][i][k] for k in var_indices_by_contig[j]])
             genome_data_2B["var_len"].append([genome_data_2["var_len"][i][k] for k in var_indices_by_contig[j]])
+        
+        print(f"\n    contig lengths: {[interval[1] - interval[0] for interval in contig_intervals]}", file=sys.stderr)
+        print(f"\n    contig pruned lengths: {contig_pruned_lens}", file=sys.stderr)
+        print(f"\n    contig padded lengths: {contig_padded_lens}", file=sys.stderr)
     
     genome_data_2 = genome_data_2B
 
