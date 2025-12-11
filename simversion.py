@@ -9,21 +9,24 @@
 import gzip, sys, argparse
 import numpy as np
 
-def break_into_contigs(sequence, n_contigs, features=[], max_edge=0, min_edge=0):
+def break_into_contigs(sequence, n_contigs, features=[], pruning=[0,0], padding=[0,0]):
     l = len(sequence)
     max_contig = int(l/n_contigs)
     assert max_edge >= min_edge, "Max edge cannot be shorter than mid edge."
     assert 2*max_edge < max_contig, "Contigs are too short relative to the edges."
     contigs = []
     contig_intervals = []
+    contig_pruned_lens = []
+    contig_padded_lens = []
     feature_indices_by_contig = []
     features_by_contig = []
     j = 0
     for k in range(n_contigs):
-        left_edge = np.random.randint(min_edge,max_edge+1)
-        right_edge = np.random.randint(min_edge,max_edge+1)
-        contig_len = max_contig - left_edge - right_edge
-        j += left_edge
+        left_prune = abs(int(np.random.normal(*pruning)))
+        right_prune = abs(int(np.random.normal(*pruning)))
+        contig_pruned_lens.append((left_prune, right_prune))
+        contig_len = max_contig - left_prune - right_prune
+        j += left_prune #slide along to the new start after pruning
         c = sequence[j:(j+contig_len)]
         
         feature_indices = [i for i in range(len(features)) if features[i][0] >= j and features[i][1] <= j + contig_len]
@@ -32,27 +35,28 @@ def break_into_contigs(sequence, n_contigs, features=[], max_edge=0, min_edge=0)
         
         _features_ = []
         
-        new_left_edge = np.random.randint(min_edge,max_edge+1) 
-        new_right_edge = np.random.randint(min_edge,max_edge+1)
+        left_padding_len = abs(int(np.random.normal(*padding)))
+        right_padding_len = abs(int(np.random.normal(*padding)))
         
         for i in feature_indices:
             new_feature = features[i][:]
-            new_feature[0] = new_feature[0] - j + new_left_edge
-            new_feature[1] = new_feature[1] - j + new_left_edge
+            new_feature[0] = new_feature[0] - j + left_padding_len
+            new_feature[1] = new_feature[1] - j + right_padding_len
             _features_.append(new_feature)
         
         features_by_contig.append(_features_)
         
-        new_left_seq = "".join(np.random.choice(["a","c","g","t"], new_left_edge))
-        new_right_seq = "".join(np.random.choice(["a","c","g","t"], new_right_edge))
+        left_padding_seq = "".join(np.random.choice(["a","c","g","t"], left_padding_len))
+        right_padding_seq = "".join(np.random.choice(["a","c","g","t"], right_padding_len))
+        contig_padded_lens.append((left_padding_len, right_padding_len))
         
-        contigs.append(new_left_seq + c + new_right_seq)
+        contigs.append(left_padding_seq + c + right_padding_seq)
         
         contig_intervals.append((j, j+contig_len,))
         
-        j += contig_len + right_edge
+        j += contig_len + right_prune
     
-    return (contigs, contig_intervals, features_by_contig, feature_indices_by_contig,)
+    return (contigs, contig_intervals, features_by_contig, feature_indices_by_contig, contig_pruned_lens, contig_padded_lens)
 
 
 def evolve_sequences(anc, SNV_rate, ins_rate, del_rate, inv_rate,
@@ -263,8 +267,8 @@ if __name__ == '__main__':
     
     parser.add_argument("--invertOddContigs", help="Reverse complement the first, third etc. contig in genome 2.", action='store_true')
     
-    parser.add_argument("--max_contig_edge", help="If breaking, maximum length of randomised contig edges", action = "store", type=int, default = 0)
-    parser.add_argument("--min_contig_edge", help="If breaking, minimum length of randomised contig edges", action = "store", type=int, default = 0)
+    parser.add_argument("--contig_edge_pruning", help="Remove a random bit of sequence from edges of each contig (so these bits will be missing)", action = "store", type=int, default = [0,0], metavar=["mean","sd"])
+    parser.add_argument("--contig_edge_padding", help="Add a random bit of sequence to edges of each contig (unalignable noise)", action = "store", type=int, default = [0,0], metavar=["mean","sd"])
     
     args = parser.parse_args()
     
@@ -322,11 +326,12 @@ if args.break_genome1:
     genome_data_1B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[]}
     
     for i in range(len(genome_data_1["seq_names"])):
-        contigs, contig_intervals, var_pos_by_contig, var_indices_by_contig = break_into_contigs(genome_data_1["sequences"][i],
-                                                                                                    args.number_of_contigs,
-                                                                                                    genome_data_1["var_pos"][i],
-                                                                                                    max_edge = args.max_contig_edge,
-                                                                                                    min_edge = args.max_contig_edge)
+        contigs, contig_intervals, var_pos_by_contig,
+        var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_1["sequences"][i],
+                                                                                            args.number_of_contigs,
+                                                                                            genome_data_1["var_pos"][i],
+                                                                                            pruning_mean_sd = args.contig_edge_pruning,
+                                                                                            padding_mean_sd = args.contig_edge_padding)
         
         for j in range(len(contigs)):
             genome_data_1B["seq_names"].append(genome_data_1["seq_names"][i] + "." + str(j))
@@ -343,11 +348,12 @@ if args.break_genome2:
     genome_data_2B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[]}
     
     for i in range(len(genome_data_2["seq_names"])):
-        contigs, contig_intervals, var_pos_by_contig, var_indices_by_contig = break_into_contigs(genome_data_2["sequences"][i],
-                                                                                                    args.number_of_contigs,
-                                                                                                    genome_data_2["var_pos"][i],
-                                                                                                    max_edge = args.max_contig_edge,
-                                                                                                    min_edge = args.max_contig_edge)
+        contigs, contig_intervals, var_pos_by_contig,
+        var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_2["sequences"][i],
+                                                                                            args.number_of_contigs,
+                                                                                            genome_data_2["var_pos"][i],
+                                                                                            pruning_mean_sd = args.contig_edge_pruning,
+                                                                                            padding_mean_sd = args.contig_edge_padding)
         
         for j in range(len(contigs)):
             genome_data_2B["seq_names"].append(genome_data_2["seq_names"][i] + "." + str(j+1))
