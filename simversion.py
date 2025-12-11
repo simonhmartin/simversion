@@ -347,8 +347,7 @@ if args.break_genome2:
     genome_data_2B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[], "var_len":[]}
     
     for i in range(len(genome_data_2["seq_names"])):
-        contigs, contig_intervals, var_pos_by_contig,
-        var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_2["sequences"][i],
+        contigs, contig_intervals, var_pos_by_contig, var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_2["sequences"][i],
                                                                                             args.number_of_contigs,
                                                                                             genome_data_2["var_pos"][i],
                                                                                             pruning = args.contig_edge_pruning,
@@ -369,7 +368,7 @@ if args.invertOddContigs:
     print("\nInverting odd contigs in genome 2.", file=sys.stderr)
     for i in range(0, len(genome_data_2["seq_names"]), 2):
         genome_data_2["sequences"][i] = revComplement(genome_data_2["sequences"][i])
-        l = genome_data_2["sequences"][i]
+        l = len(genome_data_2["sequences"][i])
         genome_data_2["var_pos"][i] = [[l-var[1], l-var[0]] for var in reversed(genome_data_2["var_pos"][i])]
         #you also need to reverse the other info columns!
         genome_data_2["var_len"][i] = [var for var in reversed(genome_data_2["var_len"][i])]
