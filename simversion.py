@@ -12,8 +12,8 @@ import numpy as np
 def break_into_contigs(sequence, n_contigs, features=[], pruning=[0,0], padding=[0,0]):
     l = len(sequence)
     max_contig = int(l/n_contigs)
-    assert max_edge >= min_edge, "Max edge cannot be shorter than mid edge."
-    assert 2*max_edge < max_contig, "Contigs are too short relative to the edges."
+    #assert max_edge >= min_edge, "Max edge cannot be shorter than mid edge."
+    #assert 2*max_edge < max_contig, "Contigs are too short relative to the edges."
     contigs = []
     contig_intervals = []
     contig_pruned_lens = []
@@ -326,20 +326,19 @@ if args.break_genome1:
     genome_data_1B = {"seq_names":[], "sequences":[], "var_pos":[], "var_type":[], "var_genome":[]}
     
     for i in range(len(genome_data_1["seq_names"])):
-        contigs, contig_intervals, var_pos_by_contig,
-        var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_1["sequences"][i],
+        contigs, contig_intervals, var_pos_by_contig, var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_1["sequences"][i],
                                                                                             args.number_of_contigs,
                                                                                             genome_data_1["var_pos"][i],
-                                                                                            pruning_mean_sd = args.contig_edge_pruning,
-                                                                                            padding_mean_sd = args.contig_edge_padding)
+                                                                                            pruning = args.contig_edge_pruning,
+                                                                                            padding = args.contig_edge_padding)
         
         for j in range(len(contigs)):
             genome_data_1B["seq_names"].append(genome_data_1["seq_names"][i] + "." + str(j))
             genome_data_1B["sequences"].append(contigs[j])
             genome_data_1B["var_pos"].append(var_pos_by_contig[j])
-            genome_data_1B["var_type"].append(genome_data_1["var_type"][i][k] for k in var_indices_by_contig[j])
-            genome_data_1B["var_genome"].append(genome_data_1["var_genome"][i][k] for k in var_indices_by_contig[j])
-            genome_data_1B["var_len"].append(genome_data_1["var_len"][i][k] for k in var_indices_by_contig[j])
+            genome_data_1B["var_type"].append([genome_data_1["var_type"][i][k] for k in var_indices_by_contig[j]])
+            genome_data_1B["var_genome"].append([genome_data_1["var_genome"][i][k] for k in var_indices_by_contig[j]])
+            genome_data_1B["var_len"].append([genome_data_1["var_len"][i][k] for k in var_indices_by_contig[j]])
     
     genome_data_1 = genome_data_1B
 
@@ -352,16 +351,16 @@ if args.break_genome2:
         var_indices_by_contig, contig_pruned_lens, contig_padded_lens = break_into_contigs(genome_data_2["sequences"][i],
                                                                                             args.number_of_contigs,
                                                                                             genome_data_2["var_pos"][i],
-                                                                                            pruning_mean_sd = args.contig_edge_pruning,
-                                                                                            padding_mean_sd = args.contig_edge_padding)
+                                                                                            pruning = args.contig_edge_pruning,
+                                                                                            padding = args.contig_edge_padding)
         
         for j in range(len(contigs)):
             genome_data_2B["seq_names"].append(genome_data_2["seq_names"][i] + "." + str(j+1))
             genome_data_2B["sequences"].append(contigs[j])
             genome_data_2B["var_pos"].append(var_pos_by_contig[j])
-            genome_data_2B["var_type"].append(genome_data_2["var_type"][i][k] for k in var_indices_by_contig[j])
-            genome_data_2B["var_genome"].append(genome_data_2["var_genome"][i][k] for k in var_indices_by_contig[j])
-            genome_data_2B["var_len"].append(genome_data_2["var_len"][i][k] for k in var_indices_by_contig[j])
+            genome_data_2B["var_type"].append([genome_data_2["var_type"][i][k] for k in var_indices_by_contig[j]])
+            genome_data_2B["var_genome"].append([genome_data_2["var_genome"][i][k] for k in var_indices_by_contig[j]])
+            genome_data_2B["var_len"].append([genome_data_2["var_len"][i][k] for k in var_indices_by_contig[j]])
     
     genome_data_2 = genome_data_2B
 
@@ -372,6 +371,10 @@ if args.invertOddContigs:
         genome_data_2["sequences"][i] = revComplement(genome_data_2["sequences"][i])
         l = genome_data_2["sequences"][i]
         genome_data_2["var_pos"][i] = [[l-var[1], l-var[0]] for var in reversed(genome_data_2["var_pos"][i])]
+        #you also need to reverse the other info columns!
+        genome_data_2["var_len"][i] = [var for var in reversed(genome_data_2["var_len"][i])]
+        genome_data_2["var_genome"][i] = [var for var in reversed(genome_data_2["var_genome"][i])]
+        genome_data_2["var_type"][i] = [var for var in reversed(genome_data_2["var_type"][i])]
 
 ### Write outputs
 print("\nWriting output files", file=sys.stderr)
